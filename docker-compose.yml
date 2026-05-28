@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: aeterna-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: aeterna_root
+      MYSQL_DATABASE: aeterna_db
+      MYSQL_USER: aeterna_user
+      MYSQL_PASSWORD: aeterna_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - aeterna_mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: aeterna-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: aeterna_user
+      PMA_PASSWORD: aeterna_pass
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+
+volumes:
+  aeterna_mysql_data:

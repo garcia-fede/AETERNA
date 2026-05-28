@@ -1,0 +1,19 @@
+package com.aeterna.medicacion;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> {
+
+    @Query("SELECT m FROM Medicamento m JOIN FETCH m.residente WHERE m.residente.id = :residenteId AND m.activo = true")
+    List<Medicamento> findByResidenteIdAndActivoTrue(@Param("residenteId") Long residenteId);
+
+    @Query("SELECT DISTINCT m FROM Medicamento m JOIN FETCH m.residente JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno")
+    List<Medicamento> findActivosPorTurno(@Param("turno") Turno turno);
+
+    @Query("SELECT COUNT(DISTINCT m) FROM Medicamento m JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno")
+    long countActivosByTurno(@Param("turno") Turno turno);
+}
