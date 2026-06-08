@@ -1,7 +1,9 @@
 package com.aeterna.familiar;
 
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.common.exception.BadRequestException;
 import com.aeterna.common.exception.NotFoundException;
+import com.aeterna.familiar.dto.PersonalAsignadoResponse;
 import com.aeterna.familiar.dto.VinculoRequest;
 import com.aeterna.familiar.dto.VinculoResponse;
 import com.aeterna.residente.Residente;
@@ -22,6 +24,7 @@ public class FamiliarResidenteService {
     private final FamiliarResidenteRepository familiarResidenteRepository;
     private final UsuarioRepository usuarioRepository;
     private final ResidenteRepository residenteRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
 
     @Transactional
     public VinculoResponse vincular(VinculoRequest request) {
@@ -81,5 +84,17 @@ public class FamiliarResidenteService {
                 .orElseThrow(() -> new NotFoundException("No hay ningún residente vinculado a este familiar"));
 
         return vinculo.getResidente();
+    }
+
+    public List<PersonalAsignadoResponse> listarPersonalAsignado(String usuarioEmail) {
+        Residente residente = obtenerResidenteDeFamiliar(usuarioEmail);
+        return asignacionPersonalRepository.findActivasByResidenteId(residente.getId())
+                .stream()
+                .map(a -> PersonalAsignadoResponse.builder()
+                        .id(a.getUsuario().getId())
+                        .nombre(a.getUsuario().getNombre())
+                        .apellido(a.getUsuario().getApellido())
+                        .build())
+                .toList();
     }
 }

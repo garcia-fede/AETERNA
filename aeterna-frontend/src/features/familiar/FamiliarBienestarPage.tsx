@@ -164,6 +164,10 @@ export default function FamiliarBienestarPage() {
                     Cambio ropa: {r.cambioRopa ? 'Sí' : 'No'}
                   </span>
                 </div>
+
+                <div className="mt-2 text-xs text-gray-400 italic">
+                  Registrado por: {r.personalNombreCompleto}
+                </div>
               </div>
             ))}
           </div>

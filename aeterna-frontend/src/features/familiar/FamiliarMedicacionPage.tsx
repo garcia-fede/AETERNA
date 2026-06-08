@@ -89,6 +89,9 @@ export default function FamiliarMedicacionPage() {
                     <span className="text-xs text-gray-400">
                       {new Date(a.fechaHora).toLocaleDateString('es-AR')} — {formatTurno(a.turno)}
                     </span>
+                    <span className="text-xs text-gray-400 italic">
+                      Por: {a.personalNombreCompleto}
+                    </span>
                   </div>
                 </div>
               ))}

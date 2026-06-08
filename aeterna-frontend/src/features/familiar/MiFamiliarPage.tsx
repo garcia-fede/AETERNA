@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Pill, HeartPulse, Bell, User, Building2, Calendar, CreditCard } from 'lucide-react';
+import { Pill, HeartPulse, Bell, User, Building2, Calendar, CreditCard, Users } from 'lucide-react';
 import Layout from '../../components/Layout';
 import Badge from '../../components/ui/Badge';
 import { familiarService } from './familiarService';
@@ -21,6 +21,13 @@ export default function MiFamiliarPage() {
   const { data: residente, isLoading, isError } = useQuery({
     queryKey: ['mi-residente'],
     queryFn: familiarService.getMiResidente,
+    staleTime: 0,
+  });
+
+  const { data: personalAsignado = [] } = useQuery({
+    queryKey: ['personal-asignado'],
+    queryFn: familiarService.getPersonalAsignado,
+    enabled: !!residente,
     staleTime: 0,
   });
 
@@ -149,6 +156,24 @@ export default function MiFamiliarPage() {
               <p className="text-sm text-gray-700">{residente.observaciones}</p>
             </div>
           )}
+
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-blue-500" />
+              <p className="text-xs text-blue-600 uppercase tracking-wide font-medium">Personal a cargo</p>
+            </div>
+            {personalAsignado.length === 0 ? (
+              <p className="text-sm text-blue-400">Sin personal asignado actualmente</p>
+            ) : (
+              <ul className="space-y-1">
+                {personalAsignado.map((p) => (
+                  <li key={p.id} className="text-sm text-blue-900 font-medium">
+                    {p.nombre} {p.apellido}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div>

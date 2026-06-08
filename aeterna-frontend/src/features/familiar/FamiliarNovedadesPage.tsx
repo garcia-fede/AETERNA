@@ -74,7 +74,7 @@ export default function FamiliarNovedadesPage() {
                     <p className="text-sm text-gray-800 leading-relaxed">{n.descripcion}</p>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+                <div className="mt-3 flex items-center gap-4 text-xs text-gray-400 flex-wrap">
                   <span>
                     {new Date(n.fechaHora).toLocaleDateString('es-AR', {
                       day: '2-digit',
@@ -84,6 +84,7 @@ export default function FamiliarNovedadesPage() {
                       minute: '2-digit',
                     })}
                   </span>
+                  <span className="italic">Reportado por: {n.personalNombreCompleto}</span>
                 </div>
               </div>
             ))}

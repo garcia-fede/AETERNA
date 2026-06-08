@@ -14,6 +14,9 @@ public interface AsignacionPersonalRepository extends JpaRepository<AsignacionPe
     @Query("SELECT a FROM AsignacionPersonal a JOIN FETCH a.residente JOIN FETCH a.usuario WHERE a.activo = true ORDER BY a.usuario.apellido, a.usuario.nombre")
     List<AsignacionPersonal> findAllActivas();
 
+    @Query("SELECT a FROM AsignacionPersonal a JOIN FETCH a.usuario WHERE a.residente.id = :residenteId AND a.activo = true")
+    List<AsignacionPersonal> findActivasByResidenteId(@Param("residenteId") Long residenteId);
+
     boolean existsByUsuarioIdAndResidenteIdAndActivoTrue(Long usuarioId, Long residenteId);
 
     @Query("SELECT a FROM AsignacionPersonal a WHERE a.usuario.id = :usuarioId AND a.residente.id = :residenteId AND a.activo = true")

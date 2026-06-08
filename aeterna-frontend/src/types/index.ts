@@ -337,6 +337,12 @@ export interface VinculoRequest {
   nivelAcceso?: NivelAcceso;
 }
 
+export interface PersonalAsignado {
+  id: number;
+  nombre: string;
+  apellido: string;
+}
+
 export interface UsuarioAdmin {
   id: number;
   nombre: string;

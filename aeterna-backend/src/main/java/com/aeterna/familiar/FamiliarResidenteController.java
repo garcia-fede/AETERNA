@@ -1,6 +1,7 @@
 package com.aeterna.familiar;
 
 import com.aeterna.common.dto.ApiResponse;
+import com.aeterna.familiar.dto.PersonalAsignadoResponse;
 import com.aeterna.familiar.dto.VinculoRequest;
 import com.aeterna.familiar.dto.VinculoResponse;
 import com.aeterna.residente.dto.ResidenteResponse;
@@ -48,5 +49,13 @@ public class FamiliarResidenteController {
                 familiarResidenteService.obtenerResidenteDeFamiliar(authentication.getName())
         );
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/personal-asignado")
+    @PreAuthorize("hasRole('FAMILIAR')")
+    public ResponseEntity<ApiResponse<List<PersonalAsignadoResponse>>> personalAsignado(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                familiarResidenteService.listarPersonalAsignado(authentication.getName())
+        ));
     }
 }
