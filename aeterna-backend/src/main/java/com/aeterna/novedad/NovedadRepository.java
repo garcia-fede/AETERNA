@@ -20,6 +20,18 @@ public interface NovedadRepository extends JpaRepository<Novedad, Long> {
             @Param("tipo") TipoNovedad tipo,
             @Param("prioridad") PrioridadNovedad prioridad);
 
+    @Query("SELECT n FROM Novedad n JOIN FETCH n.residente JOIN FETCH n.personal " +
+           "WHERE n.residente.id IN :residenteIds " +
+           "AND (:residenteId IS NULL OR n.residente.id = :residenteId) " +
+           "AND (:tipo IS NULL OR n.tipo = :tipo) " +
+           "AND (:prioridad IS NULL OR n.prioridad = :prioridad) " +
+           "ORDER BY n.fechaHora DESC")
+    List<Novedad> findConFiltrosYResidentes(
+            @Param("residenteIds") List<Long> residenteIds,
+            @Param("residenteId") Long residenteId,
+            @Param("tipo") TipoNovedad tipo,
+            @Param("prioridad") PrioridadNovedad prioridad);
+
     @Query("SELECT n FROM Novedad n JOIN FETCH n.personal " +
            "WHERE n.residente.id = :residenteId ORDER BY n.fechaHora DESC")
     List<Novedad> findByResidenteFetch(@Param("residenteId") Long residenteId);

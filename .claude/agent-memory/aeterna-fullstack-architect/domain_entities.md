@@ -23,16 +23,32 @@ metadata:
 
 7. **Turno** — turno de trabajo del personal. Mañana 06:00-14:00, Tarde 14:00-22:00, Noche 22:00-06:00 (inferido de los prototipos).
 
-8. **Asignación** — qué residentes tiene asignados un trabajador en un turno.
+8. **AsignacionPersonal** — tabla `asignaciones_personal`, vincula Usuario (PERSONAL) con Residente.
+   - Campos: id, usuario_id (FK), residente_id (FK), fecha_asignacion, activo (boolean, soft delete), created_at
+   - Constraint unique: (usuario_id, residente_id)
+   - Rol validado en service: solo acepta usuarios con rol PERSONAL
+   - Soft delete: `activo = false` al desasignar (no se borra el registro)
+   - Ubicación backend: paquete `com.aeterna.asignacion`
+   - DTOs: `AsignacionResponse`, `PersonalConResidentesResponse` (con inner class `ResidenteAsignadoDto`)
 
 **Relaciones clave:**
-- Usuario (FAMILIAR) → vinculado a 1 Residente
+- Usuario (FAMILIAR) → vinculado a 1 Residente via `familiar_residente`
+- Usuario (PERSONAL) → vinculado a N Residentes via `asignaciones_personal`
 - Residente → tiene 1 Habitación
 - Residente → tiene N medicamentos activos
 - Residente → tiene N registros de bienestar (uno por turno/día)
 - Residente → tiene N novedades
-- Personal → tiene N asignaciones de residentes por turno
+- Personal → tiene N asignaciones de residentes
 
-**Pendiente de confirmar:** estructura exacta de turnos (si es una tabla separada o solo un enum).
+**Lógica de filtrado en ResidenteService.listarActivos():**
+- Si rol == PERSONAL: devuelve solo los residentes con asignación activa
+- Si rol == ADMIN: devuelve todos los activos (sin filtro)
+- Usa SecurityContextHolder para obtener el email del usuario autenticado
 
-Relacionado: [[functional-analysis]]
+**Seeds de personal:**
+- `enfermero@aeterna.com / Personal123!` (Marcos Rodríguez) — asignado a residentes 0 y 1
+- `enfermera@aeterna.com / Personal123!` (Laura Sánchez) — asignada a residente 2
+
+**Pendiente de confirmar:** estructura exacta de turnos (si es una tabla separada o solo un enum). Confirmado que `Turno` es un enum: MANIANA, TARDE, NOCHE.
+
+Relacionado: [[functional-analysis]], [[project-iteracion1]]

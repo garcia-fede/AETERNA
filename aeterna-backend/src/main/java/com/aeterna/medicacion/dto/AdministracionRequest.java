@@ -5,6 +5,8 @@ import com.aeterna.medicacion.Turno;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class AdministracionRequest {
 
@@ -18,4 +20,6 @@ public class AdministracionRequest {
     private Turno turno;
 
     private String observaciones;
+
+    private LocalDateTime fechaHora;
 }

@@ -10,6 +10,7 @@ import {
   Bell,
   User,
   UserCog,
+  UserCheck,
 } from 'lucide-react';
 import type { Rol } from '../types';
 
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { to: '/novedades', label: 'Novedades', icon: Bell, roles: ['ADMIN', 'PERSONAL'] },
   // Administración (solo ADMIN)
   { to: '/admin/usuarios', label: 'Usuarios', icon: UserCog, roles: ['ADMIN'], dividerAbove: true },
+  { to: '/admin/asignaciones', label: 'Asignaciones', icon: UserCheck, roles: ['ADMIN'] },
   // Portal familiar
   { to: '/familiar', label: 'Mi familiar', icon: User, roles: ['FAMILIAR'] },
   { to: '/familiar/medicacion', label: 'Medicación', icon: Pill, roles: ['FAMILIAR'] },

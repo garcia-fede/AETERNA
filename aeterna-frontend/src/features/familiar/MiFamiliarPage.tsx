@@ -21,7 +21,7 @@ export default function MiFamiliarPage() {
   const { data: residente, isLoading, isError } = useQuery({
     queryKey: ['mi-residente'],
     queryFn: familiarService.getMiResidente,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   if (isLoading) {

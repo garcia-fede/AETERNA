@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { queryClient } from '../main';
 import type { LoginResponse, Rol } from '../types';
 
 interface AuthUser {
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ token: null, user: null });
+        queryClient.clear();
       },
 
       isAuthenticated: () => {

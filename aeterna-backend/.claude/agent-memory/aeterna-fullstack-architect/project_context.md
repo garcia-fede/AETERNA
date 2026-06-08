@@ -48,8 +48,28 @@ metadata:
 - Cache: staleTime=30s, refetchInterval=60s
 - Skeleton con animate-pulse durante carga
 
+## Iteracion 6 — COMPLETADA (2026-06-08)
+- Modulo asignacion: AsignacionPersonal (tabla asignaciones_personal), paquete com.aeterna.asignacion
+  - Entidad: id, usuario_id (FK PERSONAL), residente_id (FK), fecha_asignacion, activo, created_at
+  - Constraint unique (usuario_id, residente_id), soft delete (activo=false)
+  - Repository: findActivasByUsuarioId, findAllActivas (join fetch para evitar N+1), existsByUsuarioIdAndResidenteIdAndActivoTrue
+  - Service: asignar, desasignar (soft), listarPorPersonal, listarTodoElPersonalConResidentes
+  - Controller: GET /api/asignaciones/personal, GET /api/asignaciones/personal/{id}/residentes, POST y DELETE /api/asignaciones/personal/{uid}/residentes/{rid} — todos ADMIN
+- ResidenteService modificado: listarActivos() filtra por rol via SecurityContextHolder
+  - PERSONAL: solo residentes con asignacion activa
+  - ADMIN: todos los activos (sin cambio de comportamiento anterior)
+- DataSeeder ampliado: seedPersonalUsers (idempotente) + seedAsignacionesPersonal
+  - enfermero@aeterna.com / Personal123! — asignado a residentes 0 y 1
+  - enfermera@aeterna.com / Personal123! — asignada a residente 2
+- Frontend: AsignacionPersonalPage, AsignarResidenteModal, asignacionService.ts
+  - Ruta /admin/asignaciones (solo ADMIN)
+  - Sidebar: item "Asignaciones" con icono UserCheck
+  - React Query: queryKey=['asignaciones-personal'], staleTime=60s
+  - ResidentesPage: sin cambios de logica (filtrado transparente por backend)
+- Tipos agregados: AsignacionPersonal, PersonalConResidentes, ResidenteAsignado en types/index.ts
+
 ## Proximas iteraciones planificadas
-- Iteracion 6: (pendiente definir)
+- Iteracion 7: (pendiente definir)
 
 ## Why
 Proyecto de seminario universitario con objetivo de nivel produccion real.

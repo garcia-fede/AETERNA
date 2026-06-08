@@ -1,12 +1,16 @@
 package com.aeterna.medicacion;
 
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.common.exception.BadRequestException;
 import com.aeterna.common.exception.NotFoundException;
 import com.aeterna.medicacion.dto.AdministracionRequest;
 import com.aeterna.medicacion.dto.TomaPendienteResponse;
+import com.aeterna.usuario.Rol;
 import com.aeterna.usuario.Usuario;
 import com.aeterna.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +28,23 @@ public class AdministracionService {
     private final AdministracionRepository administracionRepository;
     private final MedicamentoRepository medicamentoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
 
     @Transactional(readOnly = true)
     public List<TomaPendienteResponse> listarTomasPendientes(LocalDate fecha, Turno turno) {
-        List<Medicamento> medicamentos = medicamentoRepository.findActivosPorTurno(turno);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName()).orElse(null);
+
+        List<Medicamento> medicamentos;
+        if (usuario != null && usuario.getRol() == Rol.PERSONAL) {
+            List<Long> residenteIds = asignacionPersonalRepository.findActivasByUsuarioId(usuario.getId())
+                    .stream().map(a -> a.getResidente().getId()).toList();
+            medicamentos = residenteIds.isEmpty()
+                    ? List.of()
+                    : medicamentoRepository.findActivosPorTurnoYResidentes(turno, residenteIds);
+        } else {
+            medicamentos = medicamentoRepository.findActivosPorTurno(turno);
+        }
 
         List<Administracion> administraciones = administracionRepository.findByFechaAndTurno(fecha, turno);
 
@@ -67,9 +84,11 @@ public class AdministracionService {
             throw new BadRequestException("El medicamento no está activo");
         }
 
-        LocalDate hoy = LocalDate.now();
+        LocalDateTime fechaHoraAdmin = request.getFechaHora() != null ? request.getFechaHora() : LocalDateTime.now();
+        LocalDate fechaAdmin = fechaHoraAdmin.toLocalDate();
+
         administracionRepository.findByMedicamentoIdAndFechaAndTurno(
-                request.getMedicamentoId(), hoy, request.getTurno()
+                request.getMedicamentoId(), fechaAdmin, request.getTurno()
         ).ifPresent(a -> {
             throw new BadRequestException("Ya se registró una administración para este medicamento en este turno");
         });
@@ -80,8 +99,8 @@ public class AdministracionService {
         Administracion administracion = Administracion.builder()
                 .medicamento(medicamento)
                 .personal(personal)
-                .fecha(hoy)
-                .fechaHora(LocalDateTime.now())
+                .fecha(fechaAdmin)
+                .fechaHora(fechaHoraAdmin)
                 .turno(request.getTurno())
                 .estado(request.getEstado())
                 .observaciones(request.getObservaciones())

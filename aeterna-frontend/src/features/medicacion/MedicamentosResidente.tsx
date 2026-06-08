@@ -23,7 +23,7 @@ const turnoBadgeColor = (turno: Turno): 'blue' | 'yellow' | 'gray' => {
 export default function MedicamentosResidente({ residenteId }: Props) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const isAdmin = user?.rol === 'ADMIN';
+  const canManage = user?.rol === 'ADMIN' || user?.rol === 'PERSONAL';
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Medicamento | null>(null);
@@ -65,7 +65,7 @@ export default function MedicamentosResidente({ residenteId }: Props) {
         <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
           Plan farmacológico
         </h3>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={handleNew} className="gap-1.5 text-xs py-1.5 px-3">
             <Plus className="w-3.5 h-3.5" />
             Agregar
@@ -89,7 +89,7 @@ export default function MedicamentosResidente({ residenteId }: Props) {
                 <th className="text-left px-3 py-2 font-medium text-gray-600">Vía</th>
                 <th className="text-left px-3 py-2 font-medium text-gray-600">Frecuencia</th>
                 <th className="text-left px-3 py-2 font-medium text-gray-600">Turnos</th>
-                {isAdmin && (
+                {canManage && (
                   <th className="text-right px-3 py-2 font-medium text-gray-600">Acciones</th>
                 )}
               </tr>
@@ -108,7 +108,7 @@ export default function MedicamentosResidente({ residenteId }: Props) {
                       ))}
                     </div>
                   </td>
-                  {isAdmin && (
+                  {canManage && (
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">
                         <button
@@ -135,7 +135,7 @@ export default function MedicamentosResidente({ residenteId }: Props) {
         </div>
       )}
 
-      {isAdmin && (
+      {canManage && (
         <MedicamentoFormModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}

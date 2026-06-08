@@ -8,6 +8,7 @@ import TableroTurnoPage from './features/medicacion/TableroTurnoPage';
 import CuidadosTurnoPage from './features/bienestar/CuidadosTurnoPage';
 import NovedadesPage from './features/novedades/NovedadesPage';
 import UsuariosPage from './features/admin/UsuariosPage';
+import AsignacionPersonalPage from './features/admin/AsignacionPersonalPage';
 import MiFamiliarPage from './features/familiar/MiFamiliarPage';
 import FamiliarMedicacionPage from './features/familiar/FamiliarMedicacionPage';
 import FamiliarBienestarPage from './features/familiar/FamiliarBienestarPage';
@@ -74,6 +75,15 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <UsuariosPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/asignaciones"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AsignacionPersonalPage />
           </ProtectedRoute>
         }
       />

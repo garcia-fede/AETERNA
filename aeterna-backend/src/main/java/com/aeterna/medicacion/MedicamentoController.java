@@ -31,7 +31,7 @@ public class MedicamentoController {
     }
 
     @PostMapping("/api/residentes/{residenteId}/medicamentos")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
     public ResponseEntity<ApiResponse<MedicamentoResponse>> crear(
             @PathVariable Long residenteId,
             @Valid @RequestBody MedicamentoRequest request) {
@@ -41,7 +41,7 @@ public class MedicamentoController {
     }
 
     @PutMapping("/api/medicamentos/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
     public ResponseEntity<ApiResponse<MedicamentoResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody MedicamentoRequest request) {
@@ -50,7 +50,7 @@ public class MedicamentoController {
     }
 
     @DeleteMapping("/api/medicamentos/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
     public ResponseEntity<ApiResponse<Void>> darDeBaja(@PathVariable Long id) {
         medicamentoService.darDeBaja(id);
         return ResponseEntity.ok(ApiResponse.ok(null, "Medicamento dado de baja correctamente"));

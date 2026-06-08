@@ -32,7 +32,7 @@ export default function UsuariosPage() {
   const { data: usuarios = [], isLoading } = useQuery({
     queryKey: ['usuarios', filtroRol],
     queryFn: () => usuariosService.listar(filtroRol === 'TODOS' ? undefined : filtroRol),
-    staleTime: 60 * 1000,
+    staleTime: 0,
   });
 
   const toggleActivoMutation = useMutation({

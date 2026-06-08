@@ -1,9 +1,15 @@
 package com.aeterna.residente;
 
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.common.exception.BadRequestException;
 import com.aeterna.common.exception.NotFoundException;
 import com.aeterna.residente.dto.ResidenteRequest;
+import com.aeterna.usuario.Rol;
+import com.aeterna.usuario.Usuario;
+import com.aeterna.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,8 +20,26 @@ import java.util.List;
 public class ResidenteService {
 
     private final ResidenteRepository residenteRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
 
     public List<Residente> listarActivos() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElse(null);
+
+        // Si el usuario autenticado es PERSONAL, devolver solo sus residentes asignados
+        if (usuario != null && usuario.getRol() == Rol.PERSONAL) {
+            return asignacionPersonalRepository.findActivasByUsuarioId(usuario.getId())
+                    .stream()
+                    .map(a -> a.getResidente())
+                    .filter(r -> r.getActivo())
+                    .toList();
+        }
+
+        // ADMIN y cualquier otro rol con acceso: devolver todos los activos
         return residenteRepository.findAllByActivoTrue();
     }
 

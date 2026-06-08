@@ -1,5 +1,6 @@
 package com.aeterna.bienestar;
 
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.bienestar.dto.BienestarDiarioRequest;
 import com.aeterna.bienestar.dto.BienestarDiarioResponse;
 import com.aeterna.bienestar.dto.EstadoCuidadosTurnoResponse;
@@ -7,9 +8,12 @@ import com.aeterna.common.exception.NotFoundException;
 import com.aeterna.medicacion.Turno;
 import com.aeterna.residente.Residente;
 import com.aeterna.residente.ResidenteRepository;
+import com.aeterna.usuario.Rol;
 import com.aeterna.usuario.Usuario;
 import com.aeterna.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +30,7 @@ public class BienestarDiarioService {
     private final BienestarDiarioRepository bienestarRepository;
     private final ResidenteRepository residenteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
 
     @Transactional(readOnly = true)
     public BienestarDiarioResponse obtenerOTraerNull(Long residenteId, LocalDate fecha, Turno turno) {
@@ -65,7 +70,19 @@ public class BienestarDiarioService {
 
     @Transactional(readOnly = true)
     public List<EstadoCuidadosTurnoResponse> listarEstadoCuidadosTurno(LocalDate fecha, Turno turno) {
-        List<Residente> residentes = residenteRepository.findAllByActivoTrue();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName()).orElse(null);
+
+        List<Residente> residentes;
+        if (usuario != null && usuario.getRol() == Rol.PERSONAL) {
+            List<Long> residenteIds = asignacionPersonalRepository.findActivasByUsuarioId(usuario.getId())
+                    .stream().map(a -> a.getResidente().getId()).toList();
+            residentes = residenteIds.isEmpty()
+                    ? List.of()
+                    : residenteRepository.findByIdInAndActivoTrue(residenteIds);
+        } else {
+            residentes = residenteRepository.findAllByActivoTrue();
+        }
 
         List<BienestarDiario> registros = bienestarRepository.findByFechaAndTurnoFetch(fecha, turno);
 

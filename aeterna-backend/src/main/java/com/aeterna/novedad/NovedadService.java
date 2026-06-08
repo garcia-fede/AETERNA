@@ -1,13 +1,17 @@
 package com.aeterna.novedad;
 
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.common.exception.NotFoundException;
 import com.aeterna.novedad.dto.NovedadRequest;
 import com.aeterna.novedad.dto.NovedadResponse;
 import com.aeterna.residente.Residente;
 import com.aeterna.residente.ResidenteRepository;
+import com.aeterna.usuario.Rol;
 import com.aeterna.usuario.Usuario;
 import com.aeterna.usuario.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +26,21 @@ public class NovedadService {
     private final NovedadRepository novedadRepository;
     private final ResidenteRepository residenteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
 
     @Transactional(readOnly = true)
     public List<NovedadResponse> listar(Long residenteId, TipoNovedad tipo, PrioridadNovedad prioridad) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName()).orElse(null);
+
+        if (usuario != null && usuario.getRol() == Rol.PERSONAL) {
+            List<Long> residenteIds = asignacionPersonalRepository.findActivasByUsuarioId(usuario.getId())
+                    .stream().map(a -> a.getResidente().getId()).toList();
+            if (residenteIds.isEmpty()) return List.of();
+            return novedadRepository.findConFiltrosYResidentes(residenteIds, residenteId, tipo, prioridad)
+                    .stream().map(NovedadResponse::from).collect(Collectors.toList());
+        }
+
         return novedadRepository.findConFiltros(residenteId, tipo, prioridad)
                 .stream()
                 .map(NovedadResponse::from)

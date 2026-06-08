@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pill, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Pill, ClipboardEdit } from 'lucide-react';
 import Layout from '../../components/Layout';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
 import { medicacionService } from './medicacionService';
 import { formatTurno, formatEstadoAdministracion, getTurnoActual } from '../../types';
 import type { Turno, EstadoAdministracion, TomaPendiente } from '../../types';
-import toast from 'react-hot-toast';
+import RegistrarAdministracionModal from './RegistrarAdministracionModal';
 
 const turnoOptions: Turno[] = ['MANIANA', 'TARDE', 'NOCHE'];
 
@@ -17,17 +16,12 @@ const estadoColor = (estado: EstadoAdministracion): 'green' | 'yellow' | 'red' =
   return 'red';
 };
 
-interface TomaAccionState {
-  observaciones: string;
-}
-
 export default function TableroTurnoPage() {
-  const queryClient = useQueryClient();
   const hoy = new Date().toISOString().split('T')[0];
 
   const [fecha, setFecha] = useState(hoy);
   const [turno, setTurno] = useState<Turno>(getTurnoActual());
-  const [acciones, setAcciones] = useState<Record<number, TomaAccionState>>({});
+  const [tomaSeleccionada, setTomaSeleccionada] = useState<TomaPendiente | null>(null);
 
   const queryKey = ['tomas-turno', fecha, turno];
 
@@ -38,35 +32,6 @@ export default function TableroTurnoPage() {
     refetchInterval: 60 * 1000,
   });
 
-  const registrarMutation = useMutation({
-    mutationFn: medicacionService.registrarAdministracion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      toast.success('Administración registrada');
-    },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message || 'Error al registrar';
-      toast.error(msg);
-    },
-  });
-
-  const handleRegistrar = (toma: TomaPendiente, estado: EstadoAdministracion) => {
-    const obs = acciones[toma.medicamentoId]?.observaciones ?? '';
-    registrarMutation.mutate({
-      medicamentoId: toma.medicamentoId,
-      estado,
-      turno,
-      observaciones: obs || undefined,
-    });
-  };
-
-  const setObservacion = (medicamentoId: number, value: string) => {
-    setAcciones((prev) => ({
-      ...prev,
-      [medicamentoId]: { observaciones: value },
-    }));
-  };
-
   // Agrupar tomas por residente
   const tomasPorResidente = tomas.reduce<Record<number, TomaPendiente[]>>((acc, toma) => {
     const key = toma.residenteId;
@@ -75,8 +40,10 @@ export default function TableroTurnoPage() {
     return acc;
   }, {});
 
-  const pendientesCount = tomas.filter((t) => t.estadoActual === null).length;
-  const completadasCount = tomas.filter((t) => t.estadoActual !== null).length;
+  const pendientesCount = tomas.filter((t) => t.estadoActual == null).length;
+  const administradasCount = tomas.filter((t) => t.estadoActual === 'ADMINISTRADA').length;
+  const omitadasCount = tomas.filter((t) => t.estadoActual === 'OMITIDA').length;
+  const demoraCount = tomas.filter((t) => t.estadoActual === 'CON_DEMORA').length;
 
   return (
     <Layout>
@@ -86,7 +53,7 @@ export default function TableroTurnoPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Tablero del turno</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {pendientesCount} pendientes · {completadasCount} completadas
+              {pendientesCount} pendientes · {administradasCount} administradas · {omitadasCount} omitidas{demoraCount > 0 ? ` · ${demoraCount} con demora` : ''}
             </p>
           </div>
 
@@ -128,6 +95,10 @@ export default function TableroTurnoPage() {
             {Object.entries(tomasPorResidente).map(([residenteIdStr, tomasResidente]) => {
               const residenteId = parseInt(residenteIdStr);
               const primer = tomasResidente[0];
+              const administradasResidente = tomasResidente.filter((t) => t.estadoActual === 'ADMINISTRADA').length;
+              const omitadasResidente = tomasResidente.filter((t) => t.estadoActual === 'OMITIDA').length;
+              const pendientesResidente = tomasResidente.filter((t) => t.estadoActual == null).length;
+
               return (
                 <div key={residenteId} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   {/* Header del residente */}
@@ -138,92 +109,59 @@ export default function TableroTurnoPage() {
                         <p className="text-xs text-gray-500">Hab. {primer.residenteHabitacion}</p>
                       )}
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {tomasResidente.filter((t) => t.estadoActual !== null).length}/{tomasResidente.length} administradas
+                    <div className="text-xs text-gray-400 text-right space-y-0.5">
+                      {administradasResidente > 0 && <p className="text-green-600">{administradasResidente} administradas</p>}
+                      {omitadasResidente > 0 && <p className="text-red-500">{omitadasResidente} omitidas</p>}
+                      {pendientesResidente > 0 && <p>{pendientesResidente} pendientes</p>}
                     </div>
                   </div>
 
                   {/* Tomas del residente */}
                   <div className="divide-y divide-gray-100">
                     {tomasResidente.map((toma) => (
-                      <div key={toma.medicamentoId} className="px-4 py-3">
-                        <div className="flex items-start justify-between gap-4">
-                          {/* Info del medicamento */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-gray-900 text-sm">
-                                {toma.nombreMedicamento}
+                      <div key={toma.medicamentoId} className="px-4 py-3 flex items-center justify-between gap-4">
+                        {/* Info del medicamento */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900 text-sm">
+                              {toma.nombreMedicamento}
+                            </span>
+                            {toma.dosis && (
+                              <span className="text-xs text-gray-500">{toma.dosis}</span>
+                            )}
+                            {toma.via && (
+                              <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                {toma.via}
                               </span>
-                              {toma.dosis && (
-                                <span className="text-xs text-gray-500">{toma.dosis}</span>
-                              )}
-                              {toma.via && (
-                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                                  {toma.via}
-                                </span>
-                              )}
-                            </div>
-                            {toma.frecuencia && (
-                              <p className="text-xs text-gray-400 mt-0.5">{toma.frecuencia}</p>
-                            )}
-                            {toma.observacionesMedicamento && (
-                              <p className="text-xs text-amber-600 mt-0.5 italic">
-                                {toma.observacionesMedicamento}
-                              </p>
                             )}
                           </div>
-
-                          {/* Estado o acciones */}
-                          <div className="flex-shrink-0">
-                            {toma.estadoActual !== null ? (
-                              <Badge
-                                label={formatEstadoAdministracion(toma.estadoActual)}
-                                color={estadoColor(toma.estadoActual)}
-                              />
-                            ) : (
-                              <Badge label="Pendiente" color="gray" />
-                            )}
-                          </div>
+                          {toma.frecuencia && (
+                            <p className="text-xs text-gray-400 mt-0.5">{toma.frecuencia}</p>
+                          )}
+                          {toma.observacionesMedicamento && (
+                            <p className="text-xs text-amber-600 mt-0.5 italic">
+                              {toma.observacionesMedicamento}
+                            </p>
+                          )}
                         </div>
 
-                        {/* Acciones si está pendiente */}
-                        {toma.estadoActual === null && (
-                          <div className="mt-3 space-y-2">
-                            <textarea
-                              className="input-field resize-none text-xs py-1.5"
-                              rows={1}
-                              placeholder="Observación opcional..."
-                              value={acciones[toma.medicamentoId]?.observaciones ?? ''}
-                              onChange={(e) => setObservacion(toma.medicamentoId, e.target.value)}
+                        {/* Estado o botón registrar */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {toma.estadoActual != null ? (
+                            <Badge
+                              label={formatEstadoAdministracion(toma.estadoActual)}
+                              color={estadoColor(toma.estadoActual)}
                             />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleRegistrar(toma, 'ADMINISTRADA')}
-                                disabled={registrarMutation.isPending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Administrar
-                              </button>
-                              <button
-                                onClick={() => handleRegistrar(toma, 'CON_DEMORA')}
-                                disabled={registrarMutation.isPending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg transition-colors disabled:opacity-50"
-                              >
-                                <Clock className="w-3.5 h-3.5" />
-                                Con demora
-                              </button>
-                              <button
-                                onClick={() => handleRegistrar(toma, 'OMITIDA')}
-                                disabled={registrarMutation.isPending}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-                              >
-                                <XCircle className="w-3.5 h-3.5" />
-                                Omitir
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                          ) : (
+                            <button
+                              onClick={() => setTomaSeleccionada(toma)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 border border-primary-200 rounded-lg transition-colors"
+                            >
+                              <ClipboardEdit className="w-3.5 h-3.5" />
+                              Registrar
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -233,6 +171,17 @@ export default function TableroTurnoPage() {
           </div>
         )}
       </div>
+
+      {tomaSeleccionada && (
+        <RegistrarAdministracionModal
+          isOpen={!!tomaSeleccionada}
+          onClose={() => setTomaSeleccionada(null)}
+          toma={tomaSeleccionada}
+          turno={turno}
+          fecha={fecha}
+          queryKey={queryKey}
+        />
+      )}
     </Layout>
   );
 }

@@ -1,5 +1,7 @@
 package com.aeterna.config;
 
+import com.aeterna.asignacion.AsignacionPersonal;
+import com.aeterna.asignacion.AsignacionPersonalRepository;
 import com.aeterna.bienestar.BienestarDiario;
 import com.aeterna.bienestar.BienestarDiarioRepository;
 import com.aeterna.bienestar.EstadoAnimo;
@@ -7,6 +9,9 @@ import com.aeterna.bienestar.EstadoComida;
 import com.aeterna.familiar.FamiliarResidente;
 import com.aeterna.familiar.FamiliarResidenteRepository;
 import com.aeterna.familiar.NivelAcceso;
+import com.aeterna.medicacion.Administracion;
+import com.aeterna.medicacion.AdministracionRepository;
+import com.aeterna.medicacion.EstadoAdministracion;
 import com.aeterna.medicacion.Medicamento;
 import com.aeterna.medicacion.MedicamentoRepository;
 import com.aeterna.medicacion.Turno;
@@ -41,19 +46,24 @@ public class DataSeeder implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final ResidenteRepository residenteRepository;
     private final MedicamentoRepository medicamentoRepository;
+    private final AdministracionRepository administracionRepository;
     private final BienestarDiarioRepository bienestarRepository;
     private final NovedadRepository novedadRepository;
     private final FamiliarResidenteRepository familiarResidenteRepository;
+    private final AsignacionPersonalRepository asignacionPersonalRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         seedAdminUser();
+        seedPersonalUsers();
         seedResidentes();
         seedMedicamentos();
+        seedAdministraciones();
         seedBienestar();
         seedNovedades();
         seedFamiliar();
+        seedAsignacionesPersonal();
     }
 
     private void seedAdminUser() {
@@ -193,6 +203,66 @@ public class DataSeeder implements CommandLineRunner {
                 .build());
 
         log.info("5 medicamentos de ejemplo creados");
+    }
+
+    private void seedAdministraciones() {
+        if (administracionRepository.count() > 0) {
+            return;
+        }
+
+        List<Medicamento> medicamentos = medicamentoRepository.findAll();
+        if (medicamentos.isEmpty()) return;
+
+        Usuario enfermero = usuarioRepository.findByEmail("enfermero@aeterna.com").orElse(null);
+        Usuario enfermera = usuarioRepository.findByEmail("enfermera@aeterna.com").orElse(null);
+        if (enfermero == null && enfermera == null) return;
+
+        LocalDate hoy = LocalDate.now();
+        LocalDate ayer = hoy.minusDays(1);
+        LocalDate antesDeAyer = hoy.minusDays(2);
+
+        for (Medicamento med : medicamentos) {
+            // Determinar el personal responsable según el residente asignado
+            String apellidoResidente = med.getResidente().getApellido();
+            // Martínez está asignada a enfermera; González y Fernández al enfermero
+            Usuario responsable = apellidoResidente.equals("Martínez")
+                    ? (enfermera != null ? enfermera : enfermero)
+                    : (enfermero != null ? enfermero : enfermera);
+            if (responsable == null) continue;
+
+            Set<Turno> turnos = med.getHorariosTurnos();
+            for (Turno turno : turnos) {
+                int horaBase = turno == Turno.MANIANA ? 8 : turno == Turno.TARDE ? 14 : 22;
+                String horaStr = (horaBase < 10 ? "0" + horaBase : horaBase) + ":15";
+
+                // Anteayer — todas administradas
+                administracionRepository.save(Administracion.builder()
+                        .medicamento(med)
+                        .personal(responsable)
+                        .fecha(antesDeAyer)
+                        .fechaHora(antesDeAyer.atTime(horaBase, 15))
+                        .turno(turno)
+                        .estado(EstadoAdministracion.ADMINISTRADA)
+                        .observaciones("Administrado a las " + horaStr + " — dosis completa. Sin incidencias.")
+                        .build());
+
+                // Ayer — Paracetamol omitido, resto administrado
+                boolean omitir = med.getNombreMedicamento().equals("Paracetamol");
+                administracionRepository.save(Administracion.builder()
+                        .medicamento(med)
+                        .personal(responsable)
+                        .fecha(ayer)
+                        .fechaHora(ayer.atTime(horaBase, 30))
+                        .turno(turno)
+                        .estado(omitir ? EstadoAdministracion.OMITIDA : EstadoAdministracion.ADMINISTRADA)
+                        .observaciones(omitir
+                                ? "Residente rechazó la toma. Se dejó constancia para control médico."
+                                : "Administrado a las " + (horaBase < 10 ? "0" + horaBase : horaBase) + ":30 — dosis completa.")
+                        .build());
+            }
+        }
+
+        log.info("Administraciones históricas de ejemplo creadas (por personal asignado)");
     }
 
     private void seedBienestar() {
@@ -336,6 +406,74 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         log.info("Novedades de ejemplo creadas");
+    }
+
+    private void seedPersonalUsers() {
+        if (!usuarioRepository.existsByEmail("enfermero@aeterna.com")) {
+            Usuario enfermero = Usuario.builder()
+                    .nombre("Marcos")
+                    .apellido("Rodríguez")
+                    .email("enfermero@aeterna.com")
+                    .passwordHash(passwordEncoder.encode("Personal123!"))
+                    .rol(Rol.PERSONAL)
+                    .activo(true)
+                    .build();
+            usuarioRepository.save(enfermero);
+            log.info("Usuario personal creado: enfermero@aeterna.com");
+        }
+
+        if (!usuarioRepository.existsByEmail("enfermera@aeterna.com")) {
+            Usuario enfermera = Usuario.builder()
+                    .nombre("Laura")
+                    .apellido("Sánchez")
+                    .email("enfermera@aeterna.com")
+                    .passwordHash(passwordEncoder.encode("Personal123!"))
+                    .rol(Rol.PERSONAL)
+                    .activo(true)
+                    .build();
+            usuarioRepository.save(enfermera);
+            log.info("Usuario personal creado: enfermera@aeterna.com");
+        }
+    }
+
+    private void seedAsignacionesPersonal() {
+        List<Residente> residentes = residenteRepository.findAllByActivoTrue();
+        if (residentes.isEmpty()) {
+            log.warn("No hay residentes para seed de asignaciones de personal");
+            return;
+        }
+
+        usuarioRepository.findByEmail("enfermero@aeterna.com").ifPresent(enfermero -> {
+            // Asignar primeros 2 residentes al enfermero
+            for (int i = 0; i < Math.min(2, residentes.size()); i++) {
+                Residente r = residentes.get(i);
+                if (!asignacionPersonalRepository.existsByUsuarioIdAndResidenteIdAndActivoTrue(enfermero.getId(), r.getId())) {
+                    asignacionPersonalRepository.save(AsignacionPersonal.builder()
+                            .usuario(enfermero)
+                            .residente(r)
+                            .fechaAsignacion(LocalDate.now())
+                            .activo(true)
+                            .build());
+                    log.info("Asignación creada: {} -> residente {}", enfermero.getEmail(), r.getId());
+                }
+            }
+        });
+
+        usuarioRepository.findByEmail("enfermera@aeterna.com").ifPresent(enfermera -> {
+            // Asignar el tercer residente a la enfermera (si existe)
+            if (residentes.size() >= 3) {
+                Residente r = residentes.get(2);
+                if (!asignacionPersonalRepository.existsByUsuarioIdAndResidenteIdAndActivoTrue(enfermera.getId(), r.getId())) {
+                    asignacionPersonalRepository.save(AsignacionPersonal.builder()
+                            .usuario(enfermera)
+                            .residente(r)
+                            .fechaAsignacion(LocalDate.now())
+                            .activo(true)
+                            .build());
+                    log.info("Asignación creada: {} -> residente {}", enfermera.getEmail(), r.getId());
+                }
+            }
+        });
     }
 
     private void seedFamiliar() {

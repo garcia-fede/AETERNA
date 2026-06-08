@@ -9,6 +9,8 @@ public interface ResidenteRepository extends JpaRepository<Residente, Long> {
 
     List<Residente> findAllByActivoTrue();
 
+    List<Residente> findByIdInAndActivoTrue(List<Long> ids);
+
     Optional<Residente> findByIdAndActivoTrue(Long id);
 
     boolean existsByDni(String dni);

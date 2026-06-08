@@ -12,14 +12,14 @@ export default function FamiliarNovedadesPage() {
   const { data: residente, isLoading: loadingResidente } = useQuery({
     queryKey: ['mi-residente'],
     queryFn: familiarService.getMiResidente,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const { data: novedades = [], isLoading: loadingNovedades } = useQuery({
     queryKey: ['familiar-novedades', residente?.id],
     queryFn: () => familiarService.getMisNovedades(residente!.id),
     enabled: !!residente?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   if (loadingResidente) {

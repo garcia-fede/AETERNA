@@ -16,7 +16,7 @@ export default function FamiliarBienestarPage() {
   const { data: residente, isLoading: loadingResidente } = useQuery({
     queryKey: ['mi-residente'],
     queryFn: familiarService.getMiResidente,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const hasta = new Date().toISOString().split('T')[0];
@@ -28,7 +28,7 @@ export default function FamiliarBienestarPage() {
     queryKey: ['familiar-bienestar', residente?.id, desde, hasta],
     queryFn: () => bienestarService.historial(residente!.id, desde, hasta),
     enabled: !!residente?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   if (loadingResidente) {

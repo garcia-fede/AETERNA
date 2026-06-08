@@ -45,7 +45,7 @@ export default function ResidentesPage() {
   const { data: residentes = [], isLoading } = useQuery({
     queryKey: ['residentes'],
     queryFn: residentesService.listar,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   const deleteMutation = useMutation({

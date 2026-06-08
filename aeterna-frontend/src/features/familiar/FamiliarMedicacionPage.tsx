@@ -17,7 +17,7 @@ export default function FamiliarMedicacionPage() {
   const { data: residente, isLoading: loadingResidente } = useQuery({
     queryKey: ['mi-residente'],
     queryFn: familiarService.getMiResidente,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const hasta = new Date().toISOString().split('T')[0];
@@ -29,7 +29,7 @@ export default function FamiliarMedicacionPage() {
     queryKey: ['familiar-historial-medicacion', residente?.id, desde, hasta],
     queryFn: () => medicacionService.historialAdministraciones(residente!.id, desde, hasta),
     enabled: !!residente?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   if (loadingResidente) {

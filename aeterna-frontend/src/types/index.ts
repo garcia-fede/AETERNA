@@ -143,6 +143,7 @@ export interface AdministracionRequest {
   estado: EstadoAdministracion;
   turno: Turno;
   observaciones?: string;
+  fechaHora?: string;
 }
 
 export interface TomaPendiente {
@@ -373,6 +374,40 @@ export function formatRol(rol: Rol): string {
     FAMILIAR: 'Familiar',
   };
   return map[rol];
+}
+
+// --- Asignaciones de personal ---
+
+export interface ResidenteAsignado {
+  asignacionId: number;
+  residenteId: number;
+  nombre: string;
+  apellido: string;
+  habitacion: string | null;
+  sector: string | null;
+}
+
+export interface PersonalConResidentes {
+  usuarioId: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  activo: boolean;
+  residentes: ResidenteAsignado[];
+}
+
+export interface AsignacionPersonal {
+  id: number;
+  usuarioId: number;
+  usuarioEmail: string;
+  usuarioNombreCompleto: string;
+  residenteId: number;
+  residenteNombre: string;
+  residenteApellido: string;
+  residenteHabitacion: string | null;
+  residenteSector: string | null;
+  fechaAsignacion: string;
+  createdAt: string;
 }
 
 // --- Dashboard ---

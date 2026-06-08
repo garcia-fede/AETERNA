@@ -14,6 +14,9 @@ public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> 
     @Query("SELECT DISTINCT m FROM Medicamento m JOIN FETCH m.residente JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno")
     List<Medicamento> findActivosPorTurno(@Param("turno") Turno turno);
 
+    @Query("SELECT DISTINCT m FROM Medicamento m JOIN FETCH m.residente JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno AND m.residente.id IN :residenteIds")
+    List<Medicamento> findActivosPorTurnoYResidentes(@Param("turno") Turno turno, @Param("residenteIds") List<Long> residenteIds);
+
     @Query("SELECT COUNT(DISTINCT m) FROM Medicamento m JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno")
     long countActivosByTurno(@Param("turno") Turno turno);
 }
