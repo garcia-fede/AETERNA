@@ -19,4 +19,11 @@ public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> 
 
     @Query("SELECT COUNT(DISTINCT m) FROM Medicamento m JOIN m.horariosTurnos t WHERE m.activo = true AND t = :turno")
     long countActivosByTurno(@Param("turno") Turno turno);
+
+    /**
+     * Total de tomas programadas en un día = un par (medicamento activo, turno) por cada
+     * turno configurado. Se cuenta cada fila de la colección de turnos.
+     */
+    @Query("SELECT COUNT(t) FROM Medicamento m JOIN m.horariosTurnos t WHERE m.activo = true")
+    long countTomasProgramadasDiarias();
 }

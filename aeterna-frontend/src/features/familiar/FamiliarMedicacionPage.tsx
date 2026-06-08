@@ -4,7 +4,7 @@ import MedicamentosResidente from '../medicacion/MedicamentosResidente';
 import { medicacionService } from '../medicacion/medicacionService';
 import { familiarService } from './familiarService';
 import Badge from '../../components/ui/Badge';
-import { formatTurno, formatEstadoAdministracion } from '../../types';
+import { formatTurno, formatEstadoAdministracion, fechaHoy, formatFechaLocal } from '../../types';
 import type { EstadoAdministracion } from '../../types';
 
 const estadoAdminColor = (estado: EstadoAdministracion): 'green' | 'red' | 'yellow' => {
@@ -20,10 +20,10 @@ export default function FamiliarMedicacionPage() {
     staleTime: 0,
   });
 
-  const hasta = new Date().toISOString().split('T')[0];
+  const hasta = fechaHoy();
   const desdeDate = new Date();
   desdeDate.setDate(desdeDate.getDate() - 14);
-  const desde = desdeDate.toISOString().split('T')[0];
+  const desde = formatFechaLocal(desdeDate);
 
   const { data: historial = [], isLoading: loadingHistorial } = useQuery({
     queryKey: ['familiar-historial-medicacion', residente?.id, desde, hasta],

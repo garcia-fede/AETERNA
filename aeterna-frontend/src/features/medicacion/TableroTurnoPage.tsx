@@ -4,7 +4,7 @@ import { Pill, ClipboardEdit } from 'lucide-react';
 import Layout from '../../components/Layout';
 import Badge from '../../components/ui/Badge';
 import { medicacionService } from './medicacionService';
-import { formatTurno, formatEstadoAdministracion, getTurnoActual } from '../../types';
+import { formatTurno, formatEstadoAdministracion, getTurnoActual, fechaHoy } from '../../types';
 import type { Turno, EstadoAdministracion, TomaPendiente } from '../../types';
 import RegistrarAdministracionModal from './RegistrarAdministracionModal';
 
@@ -17,7 +17,7 @@ const estadoColor = (estado: EstadoAdministracion): 'green' | 'yellow' | 'red' =
 };
 
 export default function TableroTurnoPage() {
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = fechaHoy();
 
   const [fecha, setFecha] = useState(hoy);
   const [turno, setTurno] = useState<Turno>(getTurnoActual());

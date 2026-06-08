@@ -20,4 +20,6 @@ public class ResumenDashboardResponse {
     private long totalNovedadesHoy;
     private NovedadesPorPrioridadDto novedadesPorPrioridad;
     private List<EventoActividadDto> actividadReciente;
+    /** Indicadores gerenciales. Solo se completa para el rol ADMIN; null en otros casos. */
+    private IndicadoresGestionDto indicadoresGestion;
 }

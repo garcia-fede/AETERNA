@@ -30,4 +30,12 @@ public interface BienestarDiarioRepository extends JpaRepository<BienestarDiario
 
     @Query("SELECT b FROM BienestarDiario b JOIN FETCH b.residente JOIN FETCH b.personal WHERE b.fecha = :fecha ORDER BY b.createdAt DESC")
     List<BienestarDiario> findTop5ByFecha(@Param("fecha") LocalDate fecha, Pageable pageable);
+
+    /** Residentes distintos con cuidado registrado en una fecha y turno. */
+    @Query("SELECT COUNT(DISTINCT b.residente.id) FROM BienestarDiario b WHERE b.fecha = :fecha AND b.turno = :turno")
+    long countResidentesConCuidado(@Param("fecha") LocalDate fecha, @Param("turno") Turno turno);
+
+    /** Cantidad de registros de bienestar por fecha en un rango, para series de tendencia. */
+    @Query("SELECT b.fecha, COUNT(b) FROM BienestarDiario b WHERE b.fecha BETWEEN :desde AND :hasta GROUP BY b.fecha")
+    List<Object[]> countPorFechaEnRango(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

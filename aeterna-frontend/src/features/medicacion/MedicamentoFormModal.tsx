@@ -4,6 +4,7 @@ import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { medicacionService } from './medicacionService';
+import { fechaHoy } from '../../types';
 import type { Medicamento, MedicamentoRequest, Turno } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -29,7 +30,7 @@ const emptyForm: MedicamentoRequest = {
   frecuencia: '',
   horariosTurnos: [],
   observaciones: '',
-  desde: new Date().toISOString().split('T')[0],
+  desde: fechaHoy(),
 };
 
 export default function MedicamentoFormModal({ isOpen, onClose, residenteId, medicamento }: Props) {

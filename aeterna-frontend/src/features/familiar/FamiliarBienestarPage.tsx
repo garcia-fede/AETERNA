@@ -3,7 +3,7 @@ import Layout from '../../components/Layout';
 import Badge from '../../components/ui/Badge';
 import { bienestarService } from '../bienestar/bienestarService';
 import { familiarService } from './familiarService';
-import { formatTurno, formatEstadoAnimo, formatEstadoComida } from '../../types';
+import { formatTurno, formatEstadoAnimo, formatEstadoComida, fechaHoy, formatFechaLocal } from '../../types';
 import type { Turno } from '../../types';
 
 const turnoBadgeColor = (turno: Turno): 'blue' | 'yellow' | 'gray' => {
@@ -19,10 +19,10 @@ export default function FamiliarBienestarPage() {
     staleTime: 0,
   });
 
-  const hasta = new Date().toISOString().split('T')[0];
+  const hasta = fechaHoy();
   const desdeDate = new Date();
   desdeDate.setDate(desdeDate.getDate() - 14);
-  const desde = desdeDate.toISOString().split('T')[0];
+  const desde = formatFechaLocal(desdeDate);
 
   const { data: registros = [], isLoading: loadingRegistros } = useQuery({
     queryKey: ['familiar-bienestar', residente?.id, desde, hasta],

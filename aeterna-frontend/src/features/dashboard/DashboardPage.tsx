@@ -8,6 +8,7 @@ import {
   Clock,
 } from 'lucide-react';
 import Layout from '../../components/Layout';
+import IndicadoresGestion from './IndicadoresGestion';
 import { dashboardService } from './dashboardService';
 import { useAuthStore } from '../../stores/authStore';
 import type { EventoActividad, PrioridadNovedad, EstadoAdministracion } from '../../types';
@@ -333,6 +334,9 @@ export default function DashboardPage() {
             <ActividadFeed eventos={data.actividadReciente} />
           </div>
         </div>
+
+        {/* Indicadores de gestión (solo ADMIN: el backend solo los envía a ese rol) */}
+        {data.indicadoresGestion && <IndicadoresGestion data={data.indicadoresGestion} />}
       </div>
     </Layout>
   );

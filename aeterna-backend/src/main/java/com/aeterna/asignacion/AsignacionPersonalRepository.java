@@ -24,4 +24,19 @@ public interface AsignacionPersonalRepository extends JpaRepository<AsignacionPe
             @Param("usuarioId") Long usuarioId,
             @Param("residenteId") Long residenteId
     );
+
+    /** Cuidadores distintos con al menos una asignación activa a un residente activo. */
+    @Query("SELECT COUNT(DISTINCT a.usuario.id) FROM AsignacionPersonal a WHERE a.activo = true AND a.residente.activo = true")
+    long countCuidadoresConAsignaciones();
+
+    /** Residentes activos distintos que tienen al menos un cuidador asignado. */
+    @Query("SELECT COUNT(DISTINCT a.residente.id) FROM AsignacionPersonal a WHERE a.activo = true AND a.residente.activo = true")
+    long countResidentesAsignados();
+
+    /** Carga por cuidador: (usuarioId, nombre, apellido, cantidad de residentes activos asignados). */
+    @Query("SELECT a.usuario.id, a.usuario.nombre, a.usuario.apellido, COUNT(DISTINCT a.residente.id) " +
+           "FROM AsignacionPersonal a WHERE a.activo = true AND a.residente.activo = true " +
+           "GROUP BY a.usuario.id, a.usuario.nombre, a.usuario.apellido " +
+           "ORDER BY COUNT(DISTINCT a.residente.id) DESC")
+    List<Object[]> cargaPorCuidador();
 }

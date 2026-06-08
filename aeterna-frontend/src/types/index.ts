@@ -97,6 +97,23 @@ export function getTurnoActual(): Turno {
   return 'NOCHE';
 }
 
+/**
+ * Formatea un Date como YYYY-MM-DD según la zona horaria local.
+ * No usar Date.toISOString() porque convierte a UTC y, en husos
+ * negativos (ej. Argentina UTC-3), de noche devuelve el día siguiente.
+ */
+export function formatFechaLocal(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/** Fecha de hoy en formato YYYY-MM-DD según la zona horaria local. */
+export function fechaHoy(): string {
+  return formatFechaLocal(new Date());
+}
+
 export interface Medicamento {
   id: number;
   residenteId: number;
@@ -426,6 +443,37 @@ export interface ResumenDashboard {
   totalNovedadesHoy: number;
   novedadesPorPrioridad: { baja: number; media: number; alta: number; critica: number };
   actividadReciente: EventoActividad[];
+  /** Indicadores gerenciales; solo presente para el rol ADMIN. */
+  indicadoresGestion?: IndicadoresGestion | null;
+}
+
+export interface PuntoTendencia {
+  fecha: string;
+  valor: number;
+}
+
+export interface CargaCuidador {
+  usuarioId: number;
+  nombre: string;
+  residentesAsignados: number;
+}
+
+export interface IndicadoresGestion {
+  // Adherencia
+  adherenciaHoy: number;
+  tasaOmisionHoy: number;
+  tasaDemoraHoy: number;
+  tomasProgramadasHoy: number;
+  adherencia7dias: PuntoTendencia[];
+  // Cobertura de cuidados
+  coberturaCuidadosTurno: number;
+  residentesSinCuidadoTurno: number;
+  cuidados7dias: PuntoTendencia[];
+  // Carga del personal
+  ratioResidentesPorCuidador: number;
+  residentesSinAsignar: number;
+  personalSinAsignaciones: number;
+  cargaPorCuidador: CargaCuidador[];
 }
 
 export interface EventoActividad {

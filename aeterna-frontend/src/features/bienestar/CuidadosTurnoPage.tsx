@@ -4,13 +4,13 @@ import { HeartPulse, CheckCircle, Clock } from 'lucide-react';
 import Layout from '../../components/Layout';
 import { bienestarService } from './bienestarService';
 import BienestarFormModal from './BienestarFormModal';
-import { formatTurno, getTurnoActual } from '../../types';
+import { formatTurno, getTurnoActual, fechaHoy } from '../../types';
 import type { Turno, EstadoCuidadosTurno } from '../../types';
 
 const turnoOptions: Turno[] = ['MANIANA', 'TARDE', 'NOCHE'];
 
 export default function CuidadosTurnoPage() {
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = fechaHoy();
   const [fecha, setFecha] = useState(hoy);
   const [turno, setTurno] = useState<Turno>(getTurnoActual());
   const [modalResidente, setModalResidente] = useState<EstadoCuidadosTurno | null>(null);

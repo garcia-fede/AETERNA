@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
 import { medicacionService } from './medicacionService';
-import { formatEstadoAdministracion, formatTurno } from '../../types';
+import { formatEstadoAdministracion, formatTurno, fechaHoy, formatFechaLocal } from '../../types';
 import type { EstadoAdministracion } from '../../types';
 
 interface Props {
@@ -24,10 +24,10 @@ export default function HistorialAdministracionesModal({
   residenteId,
   residenteNombre,
 }: Props) {
-  const hasta = new Date().toISOString().split('T')[0];
+  const hasta = fechaHoy();
   const desdeDate = new Date();
   desdeDate.setDate(desdeDate.getDate() - 7);
-  const desde = desdeDate.toISOString().split('T')[0];
+  const desde = formatFechaLocal(desdeDate);
 
   const { data: historial = [], isLoading } = useQuery({
     queryKey: ['historial-administraciones', residenteId],

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Modal from '../../components/ui/Modal';
 import { bienestarService } from './bienestarService';
-import { formatTurno, formatEstadoComida, formatEstadoAnimo } from '../../types';
+import { formatTurno, formatEstadoComida, formatEstadoAnimo, fechaHoy, formatFechaLocal } from '../../types';
 import type { BienestarDiario } from '../../types';
 
 interface Props {
@@ -99,10 +99,10 @@ function RegistroCard({ b }: { b: BienestarDiario }) {
 }
 
 export default function HistorialBienestarModal({ isOpen, onClose, residenteId, residenteNombre }: Props) {
-  const hasta = new Date().toISOString().split('T')[0];
+  const hasta = fechaHoy();
   const desdeDate = new Date();
   desdeDate.setDate(desdeDate.getDate() - 14);
-  const desde = desdeDate.toISOString().split('T')[0];
+  const desde = formatFechaLocal(desdeDate);
 
   const { data: registros = [], isLoading } = useQuery({
     queryKey: ['bienestar-historial', residenteId],

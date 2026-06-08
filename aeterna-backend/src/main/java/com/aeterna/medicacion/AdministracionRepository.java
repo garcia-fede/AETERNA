@@ -28,4 +28,13 @@ public interface AdministracionRepository extends JpaRepository<Administracion, 
 
     @Query("SELECT a FROM Administracion a JOIN FETCH a.medicamento m JOIN FETCH m.residente JOIN FETCH a.personal WHERE a.fecha = :fecha ORDER BY a.fechaHora DESC")
     List<Administracion> findTop10ByFecha(@Param("fecha") LocalDate fecha, Pageable pageable);
+
+    long countByFecha(LocalDate fecha);
+
+    long countByFechaAndEstadoIn(LocalDate fecha, java.util.Collection<EstadoAdministracion> estados);
+
+    /** Conteo de administraciones por fecha y estado en un rango, para series de tendencia. */
+    @Query("SELECT a.fecha, a.estado, COUNT(a) FROM Administracion a " +
+           "WHERE a.fecha BETWEEN :desde AND :hasta GROUP BY a.fecha, a.estado")
+    List<Object[]> countPorFechaYEstadoEnRango(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }
