@@ -31,4 +31,8 @@ export const usuariosService = {
   cambiarPassword: async (id: number, request: CambiarPasswordRequest): Promise<void> => {
     await api.patch(`/api/usuarios/${id}/password`, request);
   },
+
+  enviarInvitacion: async (id: number): Promise<void> => {
+    await api.post(`/api/usuarios/${id}/enviar-invitacion`);
+  },
 };

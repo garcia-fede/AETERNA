@@ -1,6 +1,7 @@
 package com.aeterna.common.exception;
 
 import com.aeterna.common.dto.ApiResponse;
+import com.aeterna.email.EmailException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +35,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Email o contraseña incorrectos"));
+    }
+
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEmail(EmailException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

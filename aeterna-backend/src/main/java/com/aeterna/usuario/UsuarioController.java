@@ -1,5 +1,6 @@
 package com.aeterna.usuario;
 
+import com.aeterna.auth.PasswordResetService;
 import com.aeterna.common.dto.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -20,6 +21,7 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final PasswordResetService passwordResetService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<UsuarioResponse>>> listar(
@@ -78,6 +80,12 @@ public class UsuarioController {
             @Valid @RequestBody CambiarPasswordRequest request) {
         usuarioService.cambiarPassword(id, request.getPasswordNueva());
         return ResponseEntity.ok(ApiResponse.ok(null, "Contraseña actualizada correctamente"));
+    }
+
+    @PostMapping("/{id}/enviar-invitacion")
+    public ResponseEntity<ApiResponse<Void>> enviarInvitacion(@PathVariable Long id) {
+        passwordResetService.enviarInvitacion(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Invitación enviada por email"));
     }
 
     // DTOs

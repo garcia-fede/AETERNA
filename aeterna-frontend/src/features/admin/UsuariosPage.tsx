@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Key, Link2, Power } from 'lucide-react';
+import { Plus, Pencil, Key, Link2, Power, Mail } from 'lucide-react';
 import Layout from '../../components/Layout';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -44,6 +44,19 @@ export default function UsuariosPage() {
     },
     onError: () => toast.error('Error al cambiar estado del usuario'),
   });
+
+  const invitacionMutation = useMutation({
+    mutationFn: (id: number) => usuariosService.enviarInvitacion(id),
+    onSuccess: () => toast.success('Invitación enviada por email'),
+    onError: (err: any) =>
+      toast.error(err.response?.data?.message || 'No se pudo enviar la invitación'),
+  });
+
+  const handleEnviarInvitacion = (u: UsuarioAdmin) => {
+    if (confirm(`¿Enviar a ${u.email} un email para que establezca su contraseña?`)) {
+      invitacionMutation.mutate(u.id);
+    }
+  };
 
   const handleNew = () => {
     setSelectedUsuario(null);
@@ -146,6 +159,14 @@ export default function UsuariosPage() {
                           title="Cambiar contraseña"
                         >
                           <Key className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEnviarInvitacion(u)}
+                          disabled={invitacionMutation.isPending && invitacionMutation.variables === u.id}
+                          className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                          title="Enviar email para cambiar contraseña"
+                        >
+                          <Mail className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleActivo(u)}

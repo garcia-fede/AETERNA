@@ -20,9 +20,37 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  # Envío de mails vía SMTP. Credenciales por variables de entorno (ver .env.example)
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        transport:
+          protocol: smtp
+
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
   expiration: 86400000
+
+# Configuración propia de la app
+app:
+  # URL base del frontend, usada para armar el link del email de invitación
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    # Remitente que figura en el "From". Por defecto, la misma cuenta SMTP
+    from: ${SMTP_FROM:${SMTP_USERNAME:}}
+    from-name: ${SMTP_FROM_NAME:AETERNA}
+  password-reset:
+    # Minutos de validez del token de invitación / cambio de contraseña
+    expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:10}
 
 springdoc:
   swagger-ui:

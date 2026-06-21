@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Mail, CheckCircle2 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -59,15 +60,18 @@ export default function UsuarioFormModal({ isOpen, onClose, usuario }: Props) {
     onSuccess: (u) => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       toast.success('Usuario creado correctamente');
-      if (rol === 'FAMILIAR') {
-        setNuevoUsuarioId(u.id);
-      } else {
-        onClose();
-      }
+      setNuevoUsuarioId(u.id);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Error al crear el usuario');
     },
+  });
+
+  const invitacionMutation = useMutation({
+    mutationFn: (id: number) => usuariosService.enviarInvitacion(id),
+    onSuccess: () => toast.success('Invitación enviada por email'),
+    onError: (err: any) =>
+      toast.error(err.response?.data?.message || 'No se pudo enviar la invitación'),
   });
 
   const actualizarMutation = useMutation({
@@ -109,24 +113,45 @@ export default function UsuarioFormModal({ isOpen, onClose, usuario }: Props) {
   const isLoading = crearMutation.isPending || actualizarMutation.isPending;
 
   if (nuevoUsuarioId) {
+    const cerrarExito = () => { setNuevoUsuarioId(null); onClose(); };
     return (
       <>
         <Modal
           isOpen={isOpen}
-          onClose={() => { setNuevoUsuarioId(null); onClose(); }}
-          title="Usuario familiar creado"
+          onClose={cerrarExito}
+          title="Usuario creado"
           size="sm"
         >
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              El usuario fue creado correctamente. ¿Deseás vincularlo a un residente ahora?
+              El usuario <strong>{nombre} {apellido}</strong> fue creado correctamente.
             </p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="secondary" onClick={() => { setNuevoUsuarioId(null); onClose(); }}>
-                Más tarde
+
+            {invitacionMutation.isSuccess ? (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Invitación enviada a {email}</span>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full justify-center"
+                loading={invitacionMutation.isPending}
+                onClick={() => invitacionMutation.mutate(nuevoUsuarioId)}
+              >
+                <Mail className="w-4 h-4" />
+                Enviar email para cambiar contraseña
               </Button>
-              <Button onClick={() => setVincularOpen(true)}>
-                Vincular a residente
+            )}
+
+            <div className="flex gap-3 justify-end pt-2">
+              {rol === 'FAMILIAR' && (
+                <Button onClick={() => setVincularOpen(true)}>
+                  Vincular a residente
+                </Button>
+              )}
+              <Button variant="secondary" onClick={cerrarExito}>
+                Listo
               </Button>
             </div>
           </div>

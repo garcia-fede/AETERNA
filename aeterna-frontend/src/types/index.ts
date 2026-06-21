@@ -390,6 +390,17 @@ export interface CambiarPasswordRequest {
   passwordNueva: string;
 }
 
+export interface ResetPasswordRequest {
+  token: string;
+  passwordNueva: string;
+}
+
+export interface TokenInfo {
+  nombre: string;
+  apellido: string;
+  email: string;
+}
+
 export function formatRol(rol: Rol): string {
   const map: Record<Rol, string> = {
     ADMIN: 'Administrador',

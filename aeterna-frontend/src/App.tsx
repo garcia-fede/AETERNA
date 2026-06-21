@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuthStore } from './stores/authStore';
 import LoginPage from './features/auth/LoginPage';
+import ResetPasswordPage from './features/auth/ResetPasswordPage';
 import DashboardPage from './features/dashboard/DashboardPage';
 import ResidentesPage from './features/residentes/ResidentesPage';
 import TableroTurnoPage from './features/medicacion/TableroTurnoPage';
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route
         path="/dashboard"
