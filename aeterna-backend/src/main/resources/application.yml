@@ -45,7 +45,15 @@ app:
   # URL base del frontend, usada para armar el link del email de invitación
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   mail:
-    # Remitente que figura en el "From". Por defecto, la misma cuenta SMTP
+    # EmailJS (https://dashboard.emailjs.com). El envío se hace por HTTP, no por
+    # SMTP (Render bloquea SMTP saliente). El remitente y el HTML se definen en
+    # la plantilla de EmailJS; acá solo se mandan las variables.
+    emailjs:
+      service-id: ${EMAILJS_SERVICE_ID:}
+      template-id: ${EMAILJS_TEMPLATE_ID:}
+      public-key: ${EMAILJS_PUBLIC_KEY:}
+      private-key: ${EMAILJS_PRIVATE_KEY:}
+    # Remitente "From" (informativo; el real lo define el servicio en EmailJS).
     from: ${SMTP_FROM:${SMTP_USERNAME:}}
     from-name: ${SMTP_FROM_NAME:AETERNA}
   password-reset:
