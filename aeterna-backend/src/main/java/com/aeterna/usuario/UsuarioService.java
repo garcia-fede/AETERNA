@@ -39,18 +39,27 @@ public class UsuarioService {
 
     @Transactional
     public Usuario crear(String nombre, String apellido, String email, String password, Rol rol) {
-        if (usuarioRepository.existsByEmail(email)) {
-            throw new BadRequestException("Ya existe un usuario con el email: " + email);
-        }
-        Usuario usuario = Usuario.builder()
-                .nombre(nombre)
-                .apellido(apellido)
-                .email(email)
-                .passwordHash(passwordEncoder.encode(password))
-                .rol(rol)
-                .activo(true)
-                .build();
-        return usuarioRepository.save(usuario);
+        return usuarioRepository.findByEmail(email).map(existente -> {
+            if (existente.getActivo()) {
+                throw new BadRequestException("Ya existe un usuario activo con el email: " + email);
+            }
+            existente.setNombre(nombre);
+            existente.setApellido(apellido);
+            existente.setRol(rol);
+            existente.setPasswordHash(passwordEncoder.encode(password));
+            existente.setActivo(true);
+            return usuarioRepository.save(existente);
+        }).orElseGet(() -> {
+            Usuario usuario = Usuario.builder()
+                    .nombre(nombre)
+                    .apellido(apellido)
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(password))
+                    .rol(rol)
+                    .activo(true)
+                    .build();
+            return usuarioRepository.save(usuario);
+        });
     }
 
     @Transactional
